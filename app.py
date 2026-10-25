@@ -16,18 +16,14 @@ st.markdown("""
     .main { background-color: #f8f9fa; }
     h1, h2, h3 { color: #1f2937; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     
-    /* Botones adaptados para móviles */
     div.stButton > button {
         background-color: #2563eb; color: white; border-radius: 6px;
         padding: 0.5rem 1rem; font-weight: bold; border: none; width: 100%;
     }
     div.stButton > button:hover { background-color: #1d4ed8; color: white; }
     
-    /* Contenedores adaptados para pantallas pequeñas */
     @media (max-width: 768px) {
-        .stMetric {
-            margin-bottom: 15px;
-        }
+        .stMetric { margin-bottom: 15px; }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -102,19 +98,20 @@ def main_app():
     st.write("---")
 
     # --- 5. CÁLCULO DE PRECIOS ---
-    st.subheader("💰 Valor a realizar descuento") # <- Subtítulo actualizado
+    st.subheader("💰 Valor a realizar descuento")
     
     col_input1, col_input2 = st.columns(2)
     with col_input1:
         precio_usd = st.number_input("Introduce el costo del producto en USD ($):", min_value=0.0, format="%.2f")
     with col_input2:
-        porcentaje_descuento = st.number_input("Descuento por pago en divisa (%):", min_value=0.0, max_value=100.0, value=5.0, format="%.1f")
+        # Aquí el valor por defecto ahora es 0.0
+        porcentaje_descuento = st.number_input("Descuento por pago en divisa (%):", min_value=0.0, max_value=100.0, value=0.0, format="%.1f")
     
     if st.button("Calcular Precio"):
         precio_en_bs_bcv = precio_usd * tasa_usd
         precio_equivalente = precio_en_bs_bcv / average_binance if average_binance > 0 else 0.0
         
-        # Aplicar descuento y redondear hacia arriba al entero superior
+        # Aplicar el descuento y redondear al entero superior
         precio_con_descuento = precio_equivalente * (1 - (porcentaje_descuento / 100))
         precio_redondeado = math.ceil(precio_con_descuento)
         
