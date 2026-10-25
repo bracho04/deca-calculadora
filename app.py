@@ -3,45 +3,31 @@ import requests
 import json
 from bs4 import BeautifulSoup
 import urllib3
+import math
 
 # Desactivar advertencias de SSL no verificado
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# --- CONFIGURACIÓN DE PÁGINA Y ESTILOS CSS ---
+# --- CONFIGURACIÓN DE PÁGINA Y ESTILOS CSS RESPONSIVOS ---
 st.set_page_config(page_title="Corporación DECA, C.A.", layout="wide")
 
 st.markdown("""
     <style>
-    /* Estilo general del fondo y tipografía */
-    .main {
-        background-color: #f8f9fa;
-    }
-    /* Títulos principales */
-    h1, h2, h3 {
-        color: #1f2937;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    /* Tarjetas de métricas personalizadas */
-    .metric-card {
-        background-color: #ffffff;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        text-align: center;
-        border-left: 5px solid #2563eb;
-    }
-    /* Botones personalizados */
+    .main { background-color: #f8f9fa; }
+    h1, h2, h3 { color: #1f2937; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    
+    /* Botones adaptados para móviles */
     div.stButton > button {
-        background-color: #2563eb;
-        color: white;
-        border-radius: 6px;
-        padding: 0.5rem 1rem;
-        font-weight: bold;
-        border: none;
+        background-color: #2563eb; color: white; border-radius: 6px;
+        padding: 0.5rem 1rem; font-weight: bold; border: none; width: 100%;
     }
-    div.stButton > button:hover {
-        background-color: #1d4ed8;
-        color: white;
+    div.stButton > button:hover { background-color: #1d4ed8; color: white; }
+    
+    /* Contenedores adaptados para pantallas pequeñas */
+    @media (max-width: 768px) {
+        .stMetric {
+            margin-bottom: 15px;
+        }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -51,11 +37,11 @@ def login():
     st.title("🔐 Acceso Seguro - Corporación DECA, C.A.")
     st.write("J-50116434-7")
     
-    col1, col2 = st.columns([1, 2])
+    col1, _ = st.columns([1, 2])
     with col1:
         password = st.text_input("Introduce la contraseña:", type="password")
         if st.button("Iniciar Sesión"):
-            if password == "deca1234": # Cambia esta contraseña cuando gustes
+            if password == "deca1234":
                 st.session_state["logged_in"] = True
                 st.rerun()
             else:
@@ -82,12 +68,7 @@ def main_app():
             data = response.json()
             items = data.get('data', [])
             prices = [float(item['adv']['price']) for item in items]
-            if len(prices) > 1:
-                filtered_prices = prices[1:]
-                next_10_prices = filtered_prices[:10]
-                average_binance = sum(next_10_prices) / len(next_10_prices) if next_10_prices else 0.0
-            else:
-                average_binance = 0.0
+            average_binance = sum(prices[1:11]) / 10 if len(prices) > 1 else 0.0
         else:
             average_binance = 0.0
     except:
@@ -111,27 +92,38 @@ def main_app():
 
     # --- 4. MOSTRAR RESULTADOS DE TASAS ---
     st.subheader("📈 Tasas Actuales del Mercado")
+    
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Promedio Binance", f"{average_binance:.2f} VES")
-    col2.metric("Tasa BCV Dólar", f"{tasa_usd:.2f} VES")
-    col3.metric("Tasa BCV Euro", f"{tasa_eur:.2f} VES")
-    col4.metric("Brecha Cambiaria", f"{brecha_cambiaria:.2f} %")
+    with col1: st.metric("Promedio Binance", f"{average_binance:.2f} VES")
+    with col2: st.metric("Tasa BCV Dólar", f"{tasa_usd:.2f} VES")
+    with col3: st.metric("Tasa BCV Euro", f"{tasa_eur:.2f} VES")
+    with col4: st.metric("Brecha Cambiaria", f"{brecha_cambiaria:.2f} %")
 
     st.write("---")
 
     # --- 5. CÁLCULO DE PRECIOS ---
-    st.subheader("💰 Cálculo de Ajuste para Pagos")
-    precio_usd = st.number_input("Introduce el costo del producto en USD ($):", min_value=0.0, format="%.2f")
+    st.subheader("💰 Valor a realizar descuento") # <- Subtítulo actualizado
+    
+    col_input1, col_input2 = st.columns(2)
+    with col_input1:
+        precio_usd = st.number_input("Introduce el costo del producto en USD ($):", min_value=0.0, format="%.2f")
+    with col_input2:
+        porcentaje_descuento = st.number_input("Descuento por pago en divisa (%):", min_value=0.0, max_value=100.0, value=5.0, format="%.1f")
     
     if st.button("Calcular Precio"):
         precio_en_bs_bcv = precio_usd * tasa_usd
-        precio_ajustado = precio_en_bs_bcv / average_binance if average_binance > 0 else 0.0
+        precio_equivalente = precio_en_bs_bcv / average_binance if average_binance > 0 else 0.0
+        
+        # Aplicar descuento y redondear hacia arriba al entero superior
+        precio_con_descuento = precio_equivalente * (1 - (porcentaje_descuento / 100))
+        precio_redondeado = math.ceil(precio_con_descuento)
         
         st.success("¡Cálculo realizado con éxito!")
+        
         res_col1, res_col2, res_col3 = st.columns(3)
-        res_col1.metric("Precio Base USD", f"{precio_usd:.2f} $")
-        res_col2.metric("Precio en Bs (BCV)", f"{precio_en_bs_bcv:.2f} Bs")
-        res_col3.metric("Equivalente P2P", f"{precio_ajustado:.2f} $")
+        with res_col1: st.metric("Precio Base USD", f"{precio_usd:.2f} $")
+        with res_col2: st.metric("Precio en Bs (BCV)", f"{precio_en_bs_bcv:.2f} Bs")
+        with res_col3: st.metric("Descuento para pagos en divisas", f"{precio_redondeado} $")
 
     st.write("---")
     if st.button("Cerrar Sesión"):
