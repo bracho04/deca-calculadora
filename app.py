@@ -15,30 +15,15 @@ st.set_page_config(page_title="Corporación DECA, C.A.", layout="wide")
 
 st.markdown("""
 <style>
-.main {
-    background-color: #f8f9fa;
-}
-h1, h2, h3 {
-    color: #1f2937;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
+.main { background-color: #f8f9fa; }
+h1, h2, h3 { color: #1f2937; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 div.stButton > button {
-    background-color: #2563eb; 
-    color: white; 
-    border-radius: 6px; 
-    padding: 0.5rem 1rem; 
-    font-weight: bold; 
-    border: none;
-    width: 100%;
+    background-color: #2563eb; color: white; border-radius: 6px;
+    padding: 0.5rem 1rem; font-weight: bold; border: none; width: 100%;
 }
-div.stButton > button:hover {
-    background-color: #1d4ed8;
-    color: white;
-}
+div.stButton > button:hover { background-color: #1d4ed8; color: white; }
 @media (max-width: 768px) {
-    .stMetric {
-        margin-bottom: 15px;
-    }
+    .stMetric { margin-bottom: 15px; }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -47,8 +32,7 @@ div.stButton > button:hover {
 def obtener_tasa_bcv():
     try:
         monitor = Monitor(BCV, 'USD')
-        # Dependiendo de la versión, price puede ser una propiedad directa.
-        return monitor.price
+        return float(monitor.price)
     except Exception as e:
         return 0.0
 
@@ -125,6 +109,7 @@ def main_app():
         precio_en_bs_bcv = precio_usd * tasa_usd
         precio_equivalente = precio_en_bs_bcv / average_binance if average_binance > 0 else 0.0
         
+        # Aplicar el descuento y redondear al entero superior
         precio_con_descuento = precio_equivalente * (1 - (porcentaje_descuento / 100))
         precio_redondeado = math.ceil(precio_con_descuento)
         
@@ -148,7 +133,3 @@ if not st.session_state["logged_in"]:
     login()
 else:
     main_app()
-    st.info(f"Tasa BCV actual: {tasa_bcv}")
-
-if __name__ == "__main__":
-    login()
