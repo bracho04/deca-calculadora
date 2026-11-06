@@ -5,7 +5,6 @@ from bs4 import BeautifulSoup
 import urllib3
 import math
 from pyDolarVenezuela import Monitor
-from pyDolarVenezuela.pages import BCV
 
 # Desactivar advertencias de SSL no verificado
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -15,15 +14,30 @@ st.set_page_config(page_title="Corporación DECA, C.A.", layout="wide")
 
 st.markdown("""
 <style>
-.main { background-color: #f8f9fa; }
-h1, h2, h3 { color: #1f2937; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-div.stButton > button {
-    background-color: #2563eb; color: white; border-radius: 6px;
-    padding: 0.5rem 1rem; font-weight: bold; border: none; width: 100%;
+.main {
+    background-color: #f8f9fa;
 }
-div.stButton > button:hover { background-color: #1d4ed8; color: white; }
+h1, h2, h3 {
+    color: #1f2937;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+div.stButton > button {
+    background-color: #2563eb; 
+    color: white; 
+    border-radius: 6px; 
+    padding: 0.5rem 1rem; 
+    font-weight: bold; 
+    border: none;
+    width: 100%;
+}
+div.stButton > button:hover {
+    background-color: #1d4ed8;
+    color: white;
+}
 @media (max-width: 768px) {
-    .stMetric { margin-bottom: 15px; }
+    .stMetric {
+        margin-bottom: 15px;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -31,8 +45,10 @@ div.stButton > button:hover { background-color: #1d4ed8; color: white; }
 # --- FUNCIÓN PARA OBTENER TASA DEL BCV ---
 def obtener_tasa_bcv():
     try:
-        monitor = Monitor(BCV, 'USD')
-        return float(monitor.price)
+        monitor = Monitor()
+        # Obtenemos la información del monitor BCV
+        bcv_data = monitor.get_value_monitors('bcv')
+        return float(bcv_data.price)
     except Exception as e:
         return 0.0
 
@@ -80,7 +96,7 @@ def main_app():
 
     # --- 2. TASA BCV ---
     tasa_usd = obtener_tasa_bcv()
-    tasa_eur = 0.0  # Puedes extender `obtener_tasa_bcv` para Euros también.
+    tasa_eur = 0.0  # Puedes extender la función para Euros si es necesario.
 
     # --- 3. CÁLCULO DE LA BRECHA ---
     brecha_cambiaria = ((average_binance - tasa_usd) / tasa_usd) * 100 if tasa_usd > 0 else 0.0
