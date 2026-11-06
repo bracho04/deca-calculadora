@@ -4,7 +4,7 @@ import json
 from bs4 import BeautifulSoup
 import urllib3
 import math
-from pydolarvenezuela import Monitor
+from pyDolarVenezuela import Monitor
 
 # Desactivar advertencias de SSL no verificado
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
