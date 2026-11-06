@@ -4,6 +4,7 @@ import json
 from bs4 import BeautifulSoup
 import urllib3
 import math
+from pydolarvenezuela import Monitor
 
 # Desactivar advertencias de SSL no verificado
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -70,16 +71,13 @@ def main_app():
     except:
         average_binance = 0.0
 
-    # --- 2. TASA BCV (DÓLAR Y EURO) ---
-    url_bcv = 'https://www.bcv.org.ve/'
-    headers_bcv = {'User-Agent': 'Mozilla/5.0'}
+    # --- 2. TASA BCV (DÓLAR Y EURO) CON PYDOLARVENEZUELA ---
     try:
-        response_bcv = requests.get(url_bcv, headers=headers_bcv, verify=False, timeout=5)
-        soup = BeautifulSoup(response_bcv.text, 'html.parser')
-        div_usd = soup.find('div', id='dolar')
-        tasa_usd = float(div_usd.find('strong').text.strip().replace(',', '.')) if div_usd else 0.0
-        div_eur = soup.find('div', id='euro')
-        tasa_eur = float(div_eur.find('strong').text.strip().replace(',', '.')) if div_eur else 0.0
+        bcv_monitor_usd = Monitor('bcv', 'USD')
+        tasa_usd = float(bcv_monitor_usd.price)
+        
+        bcv_monitor_eur = Monitor('bcv', 'EUR')
+        tasa_eur = float(bcv_monitor_eur.price)
     except:
         tasa_usd, tasa_eur = 0.0, 0.0
 
@@ -102,16 +100,14 @@ def main_app():
     
     col_input1, col_input2 = st.columns(2)
     with col_input1:
-        precio_usd = st.number_input("Introduce el costo del producto en USD ($):", min_value=0.0, format="%.2f")
+        precio_usd = st.number_input("Introduce el costo del producto in USD ($):", min_value=0.0, format="%.2f")
     with col_input2:
-        # Aquí el valor por defecto ahora es 0.0
         porcentaje_descuento = st.number_input("Descuento por pago en divisa (%):", min_value=0.0, max_value=100.0, value=0.0, format="%.1f")
     
     if st.button("Calcular Precio"):
         precio_en_bs_bcv = precio_usd * tasa_usd
         precio_equivalente = precio_en_bs_bcv / average_binance if average_binance > 0 else 0.0
         
-        # Aplicar el descuento y redondear al entero superior
         precio_con_descuento = precio_equivalente * (1 - (porcentaje_descuento / 100))
         precio_redondeado = math.ceil(precio_con_descuento)
         
