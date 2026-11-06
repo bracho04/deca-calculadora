@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import urllib3
 import math
 from pyDolarVenezuela import Monitor
+from pyDolarVenezuela.pages import BCV
 
 # Desactivar advertencias de SSL no verificado
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -45,10 +46,8 @@ div.stButton > button:hover {
 # --- FUNCIÓN PARA OBTENER TASA DEL BCV ---
 def obtener_tasa_bcv():
     try:
-        monitor = Monitor()
-        # Obtenemos la información del monitor BCV
-        bcv_data = monitor.get_value_monitors('bcv')
-        return float(bcv_data.price)
+        monitor = Monitor(BCV, 'USD')
+        return float(monitor.price)
     except Exception as e:
         return 0.0
 
@@ -96,7 +95,7 @@ def main_app():
 
     # --- 2. TASA BCV ---
     tasa_usd = obtener_tasa_bcv()
-    tasa_eur = 0.0  # Puedes extender la función para Euros si es necesario.
+    tasa_eur = 0.0
 
     # --- 3. CÁLCULO DE LA BRECHA ---
     brecha_cambiaria = ((average_binance - tasa_usd) / tasa_usd) * 100 if tasa_usd > 0 else 0.0
@@ -125,7 +124,6 @@ def main_app():
         precio_en_bs_bcv = precio_usd * tasa_usd
         precio_equivalente = precio_en_bs_bcv / average_binance if average_binance > 0 else 0.0
         
-        # Aplicar el descuento y redondear al entero superior
         precio_con_descuento = precio_equivalente * (1 - (porcentaje_descuento / 100))
         precio_redondeado = math.ceil(precio_con_descuento)
         
